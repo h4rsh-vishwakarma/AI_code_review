@@ -14,6 +14,24 @@ sys.path.insert(0, str(Path(__file__).parent / "src"))
 
 HISTORY_FILE = Path(__file__).parent / "data" / "review_history.jsonl"
 
+# Load secrets from Streamlit Cloud (if deployed there)
+_CLOUD_SECRETS = {
+    "GITHUB_TOKEN": "github_token",
+    "GROQ_API_KEY": "groq_api_key",
+    "GOOGLE_API_KEY": "google_api_key",
+    "OPENAI_API_KEY": "openai_api_key",
+    "LLM_PROVIDER": "llm_provider",
+    "MODEL_NAME": "model_name",
+}
+for env_key, secret_key in _CLOUD_SECRETS.items():
+    if env_key not in os.environ:
+        try:
+            val = st.secrets.get(env_key, "")
+            if val:
+                os.environ[env_key] = val
+        except Exception:
+            pass
+
 
 # ---------------------------------------------------------------------------
 # Helpers
