@@ -36,22 +36,20 @@ jobs:
       - name: Run AI Code Review
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
-          LLM_PROVIDER: gemini
-          MODEL_NAME: gemini-2.0-flash
+          OPENAI_API_KEY: ${{ secrets.CODE_REVIEW_BOT }}
+          LLM_PROVIDER: openai
+          MODEL_NAME: gpt-4o-mini
           GITHUB_REPOSITORY: ${{ github.repository }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
           TEAM_CONFIG: ${{ vars.TEAM_CONFIG || '{}' }}
         run: |
           echo "=== Quick API sanity check ==="
           python -c "
-          import google.generativeai as genai
-          import os
-          genai.configure(api_key=os.environ.get('GOOGLE_API_KEY', ''))
+          import openai, os
+          client = openai.OpenAI(api_key=os.environ.get('OPENAI_API_KEY', ''))
           try:
-              model = genai.GenerativeModel('gemini-2.0-flash')
-              r = model.generate_content('say OK')
-              print('API OK:', r.text.strip())
+              r = client.chat.completions.create(model='gpt-4o-mini', messages=[{'role':'user','content':'say OK'}], max_tokens=5)
+              print('API OK:', r.choices[0].message.content)
           except Exception as e:
               print('API FAILED:', type(e).__name__, e)
           "
