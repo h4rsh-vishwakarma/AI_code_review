@@ -192,6 +192,12 @@ def main() -> None:
     # Reviewer
     reviewer = CodeReviewer(rag_engine=rag_engine, rule_engine=rule_engine)
 
+    # Test API connectivity
+    print(f"[DEBUG] Model: {os.environ.get('MODEL_NAME', 'gpt-4o (default)')}")
+    print(f"[DEBUG] API key present: {bool(os.environ.get('OPENAI_API_KEY'))}")
+    print(f"[DEBUG] API key prefix: {os.environ.get('OPENAI_API_KEY', '')[:8]}...")
+    reviewer.test_api_connection()
+
     # Risk scorer
     team_config = {}
     if args.team_config:

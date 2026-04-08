@@ -41,6 +41,17 @@ jobs:
           PR_NUMBER: ${{ github.event.pull_request.number }}
           TEAM_CONFIG: ${{ vars.TEAM_CONFIG || '{}' }}
         run: |
+          echo "=== Quick API sanity check ==="
+          python -c "
+          import openai, os
+          client = openai.OpenAI(api_key=os.environ['OPENAI_API_KEY'])
+          try:
+              r = client.chat.completions.create(model='gpt-4o', messages=[{'role':'user','content':'say OK'}], max_tokens=5)
+              print('API OK:', r.choices[0].message.content)
+          except Exception as e:
+              print('API FAILED:', type(e).__name__, e)
+          "
+          echo "=== Running review ==="
           python src/main.py \
             --repo "$GITHUB_REPOSITORY" \
             --pr "$PR_NUMBER" \
