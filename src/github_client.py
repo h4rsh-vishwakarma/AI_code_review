@@ -137,6 +137,9 @@ class GitHubClient:
         except GithubException as e:
             logger.error("Failed to post review: %s", e)
             return False
+        except Exception as e:
+            logger.error("Failed to post review (unexpected): %s", e)
+            return False
 
     def post_summary_comment(self, body: str) -> bool:
         """Post a general comment on the PR."""
