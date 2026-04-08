@@ -348,11 +348,13 @@ def main() -> None:
             event=event,
         )
         if not success:
-            # Fallback: post comments individually
-            logger.warning("Batch review failed, posting individually")
-            for c in review_comments:
-                gh.post_inline_comment(c["body"], c["path"], c["line"])
-            gh.post_summary_comment(summary_markdown)
+            # Fallback: post summary with findings listed inline
+            logger.warning("Batch review failed, posting summary with findings")
+            # Add top findings to the summary
+            findings_md = "\n\n### Detailed Findings\n\n"
+            for c in review_comments[:15]:
+                findings_md += f"**`{c['path']}` line {c['line']}**\n{c['body']}\n\n---\n\n"
+            gh.post_summary_comment(summary_markdown + findings_md)
     else:
         gh.post_summary_comment(summary_markdown)
 
