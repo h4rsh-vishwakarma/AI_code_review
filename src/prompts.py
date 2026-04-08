@@ -63,7 +63,7 @@ LANGUAGE_ADDENDUMS = {
 OUTPUT_FORMAT = """
 Output format — JSON array:
 [
-  {
+  {{
     "file": "path/to/file",
     "line": 42,
     "severity": "critical | warning | suggestion",
@@ -71,7 +71,7 @@ Output format — JSON array:
     "message": "What's wrong and why",
     "suggestion": "How to fix it",
     "confidence": 0.9
-  }
+  }}
 ]
 
 If no issues found, return: []
@@ -279,10 +279,10 @@ Deduplicate, validate, and rank these findings."""),
 SUMMARY_SYSTEM = """You are a code review summarizer. Write a concise summary of the PR review.
 
 Structure your response as JSON:
-{
+{{
   "summary": "2-4 sentence summary of overall PR quality and key findings",
   "verdict": "APPROVE | REQUEST_CHANGES | COMMENT"
-}
+}}
 
 Verdict rules:
 - APPROVE: No critical issues, 0-1 warnings, code is solid
