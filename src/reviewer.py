@@ -6,11 +6,13 @@ import json
 import logging
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
-from langchain_openai import ChatOpenAI
 from langchain_core.output_parsers import JsonOutputParser
 from langchain_core.runnables import RunnablePassthrough
 
-from config import MODEL_NAME, OPENAI_API_KEY, TEMPERATURE, MAX_TOKENS, MAX_DIFF_SIZE
+from config import (
+    MODEL_NAME, OPENAI_API_KEY, GOOGLE_API_KEY,
+    TEMPERATURE, MAX_TOKENS, MAX_DIFF_SIZE, LLM_PROVIDER,
+)
 from parsers import ReviewComment, Severity
 from prompts import (
     SECURITY_PROMPT,
@@ -25,6 +27,28 @@ from prompts import (
 logger = logging.getLogger(__name__)
 
 
+def create_llm():
+    """Create the LLM instance based on configured provider."""
+    if LLM_PROVIDER == "gemini":
+        from langchain_google_genai import ChatGoogleGenerativeAI
+        print(f"[DEBUG] Using Gemini provider, model={MODEL_NAME}")
+        return ChatGoogleGenerativeAI(
+            model=MODEL_NAME,
+            google_api_key=GOOGLE_API_KEY,
+            temperature=TEMPERATURE,
+            max_output_tokens=MAX_TOKENS,
+        )
+    else:
+        from langchain_openai import ChatOpenAI
+        print(f"[DEBUG] Using OpenAI provider, model={MODEL_NAME}")
+        return ChatOpenAI(
+            model=MODEL_NAME,
+            api_key=OPENAI_API_KEY,
+            temperature=TEMPERATURE,
+            max_tokens=MAX_TOKENS,
+        )
+
+
 class CodeReviewer:
     """Multi-agent LLM code review pipeline.
 
@@ -35,12 +59,7 @@ class CodeReviewer:
     """
 
     def __init__(self, rag_engine=None, rule_engine=None):
-        self.llm = ChatOpenAI(
-            model=MODEL_NAME,
-            api_key=OPENAI_API_KEY,
-            temperature=TEMPERATURE,
-            max_tokens=MAX_TOKENS,
-        )
+        self.llm = create_llm()
         self.json_parser = JsonOutputParser()
         self.rag_engine = rag_engine
         self.rule_engine = rule_engine
