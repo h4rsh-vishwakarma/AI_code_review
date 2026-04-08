@@ -193,9 +193,13 @@ def main() -> None:
     reviewer = CodeReviewer(rag_engine=rag_engine, rule_engine=rule_engine)
 
     # Test API connectivity
-    print(f"[DEBUG] Model: {os.environ.get('MODEL_NAME', 'gpt-4o (default)')}")
-    print(f"[DEBUG] API key present: {bool(os.environ.get('OPENAI_API_KEY'))}")
-    print(f"[DEBUG] API key prefix: {os.environ.get('OPENAI_API_KEY', '')[:8]}...")
+    provider = os.environ.get('LLM_PROVIDER', 'gemini')
+    print(f"[DEBUG] Provider: {provider}")
+    print(f"[DEBUG] Model: {os.environ.get('MODEL_NAME', 'gemini-2.0-flash (default)')}")
+    if provider == "gemini":
+        print(f"[DEBUG] Google API key present: {bool(os.environ.get('GOOGLE_API_KEY'))}")
+    else:
+        print(f"[DEBUG] OpenAI API key present: {bool(os.environ.get('OPENAI_API_KEY'))}")
     reviewer.test_api_connection()
 
     # Risk scorer

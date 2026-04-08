@@ -9,9 +9,14 @@ load_dotenv()
 # --- Required ---
 GITHUB_TOKEN = os.environ.get("GITHUB_TOKEN", "")
 OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY", "")
+GOOGLE_API_KEY = os.environ.get("GOOGLE_API_KEY", "")
+
+# --- LLM Provider ---
+# Supported: "gemini" (free), "openai" (paid)
+LLM_PROVIDER = os.getenv("LLM_PROVIDER", "gemini")
 
 # --- LLM Settings ---
-MODEL_NAME = os.getenv("MODEL_NAME", "gpt-4o")
+MODEL_NAME = os.getenv("MODEL_NAME", "gemini-2.0-flash")
 TEMPERATURE = float(os.getenv("TEMPERATURE", "0.1"))
 MAX_TOKENS = int(os.getenv("MAX_TOKENS", "2000"))
 
