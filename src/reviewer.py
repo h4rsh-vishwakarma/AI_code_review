@@ -85,28 +85,39 @@ class CodeReviewer:
             return patch[:MAX_DIFF_SIZE] + "\n\n... [diff truncated]"
         return patch
 
+    def test_api_connection(self) -> bool:
+        """Quick test that the OpenAI API key works."""
+        try:
+            result = self.llm.invoke("Reply with exactly: OK")
+            print(f"[DEBUG] API test successful: {result.content[:50]}")
+            return True
+        except Exception as e:
+            print(f"[DEBUG] API test FAILED: {type(e).__name__}: {e}")
+            return False
+
     def _run_agent(self, chain, inputs: dict, agent_name: str) -> list[dict]:
         """Run a single review agent with error handling."""
         try:
+            print(f"[DEBUG] Running agent '{agent_name}'...")
             result = chain.invoke(inputs)
-            logger.info("Agent '%s' raw result type: %s", agent_name, type(result).__name__)
+            print(f"[DEBUG] Agent '{agent_name}' returned type={type(result).__name__}, value={str(result)[:300]}")
             if isinstance(result, list):
-                logger.info("Agent '%s' returned %d findings", agent_name, len(result))
+                print(f"[DEBUG] Agent '{agent_name}' found {len(result)} issues")
                 return result
             # If result is a string, try parsing it as JSON
             if isinstance(result, str):
-                logger.info("Agent '%s' returned string, attempting JSON parse", agent_name)
                 import json as _json
                 try:
                     parsed = _json.loads(result)
                     if isinstance(parsed, list):
+                        print(f"[DEBUG] Agent '{agent_name}' string->JSON parsed {len(parsed)} issues")
                         return parsed
                 except _json.JSONDecodeError:
                     pass
-            logger.warning("Agent '%s' returned unexpected type: %s — %s", agent_name, type(result).__name__, str(result)[:200])
+            print(f"[DEBUG] Agent '{agent_name}' returned unexpected result: {str(result)[:200]}")
             return []
         except Exception as e:
-            logger.error("Agent '%s' failed with %s: %s", agent_name, type(e).__name__, e)
+            print(f"[DEBUG] Agent '{agent_name}' FAILED: {type(e).__name__}: {e}")
             return []
 
     def review_file(
