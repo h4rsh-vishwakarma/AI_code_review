@@ -89,11 +89,24 @@ class CodeReviewer:
         """Run a single review agent with error handling."""
         try:
             result = chain.invoke(inputs)
+            logger.info("Agent '%s' raw result type: %s", agent_name, type(result).__name__)
             if isinstance(result, list):
+                logger.info("Agent '%s' returned %d findings", agent_name, len(result))
                 return result
+            # If result is a string, try parsing it as JSON
+            if isinstance(result, str):
+                logger.info("Agent '%s' returned string, attempting JSON parse", agent_name)
+                import json as _json
+                try:
+                    parsed = _json.loads(result)
+                    if isinstance(parsed, list):
+                        return parsed
+                except _json.JSONDecodeError:
+                    pass
+            logger.warning("Agent '%s' returned unexpected type: %s — %s", agent_name, type(result).__name__, str(result)[:200])
             return []
         except Exception as e:
-            logger.error("Agent '%s' failed: %s", agent_name, e)
+            logger.error("Agent '%s' failed with %s: %s", agent_name, type(e).__name__, e)
             return []
 
     def review_file(
@@ -144,7 +157,49 @@ class CodeReviewer:
                 except Exception as e:
                     logger.error("Agent '%s' raised: %s", agent_name, e)
 
+        # Fallback: if all agents returned nothing, try a single combined review
+        if not all_findings:
+            logger.warning("All agents returned 0 findings for %s — running fallback review", filename)
+            all_findings = self._fallback_review(base_inputs)
+
         return all_findings
+
+    def _fallback_review(self, inputs: dict) -> list[dict]:
+        """Single-pass fallback review when specialized agents all return empty."""
+        from langchain_core.prompts import ChatPromptTemplate
+
+        fallback_prompt = ChatPromptTemplate.from_messages([
+            ("system", """You are an expert code reviewer. Analyze the diff and find ALL issues:
+bugs, security flaws, performance problems, and style issues.
+
+Only comment on CHANGED lines (lines starting with +).
+Be specific — reference exact line numbers.
+
+Output as JSON array:
+[{{"file": "path", "line": N, "severity": "critical|warning|suggestion", "category": "bug|security|performance|style", "message": "issue", "suggestion": "fix", "confidence": 0.9}}]
+
+If no issues, return: []"""),
+            ("human", """File: {filename} ({language})
+
+Diff:
+```
+{patch}
+```
+
+Find all issues."""),
+        ])
+
+        try:
+            chain = fallback_prompt | self.llm | self.json_parser
+            result = chain.invoke(inputs)
+            if isinstance(result, list):
+                logger.info("Fallback review found %d issues", len(result))
+                return result
+            logger.warning("Fallback returned non-list: %s", type(result).__name__)
+            return []
+        except Exception as e:
+            logger.error("Fallback review also failed: %s: %s", type(e).__name__, e)
+            return []
 
     def aggregate_findings(
         self,
