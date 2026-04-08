@@ -322,7 +322,8 @@ def main() -> None:
 
     # Post as a single review (more efficient than individual comments)
     verdict = summary.get("verdict", "COMMENT")
-    event = verdict if verdict in ("APPROVE", "REQUEST_CHANGES") else "COMMENT"
+    # GitHub Actions token cannot APPROVE PRs — only use REQUEST_CHANGES or COMMENT
+    event = "REQUEST_CHANGES" if verdict == "REQUEST_CHANGES" else "COMMENT"
 
     summary_markdown = build_summary_markdown(
         summary=summary,
