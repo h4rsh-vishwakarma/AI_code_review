@@ -10,7 +10,7 @@ from langchain_core.output_parsers import JsonOutputParser
 from langchain_core.runnables import RunnablePassthrough
 
 from config import (
-    MODEL_NAME, OPENAI_API_KEY, GOOGLE_API_KEY,
+    MODEL_NAME, OPENAI_API_KEY, GOOGLE_API_KEY, GROQ_API_KEY,
     TEMPERATURE, MAX_TOKENS, MAX_DIFF_SIZE, LLM_PROVIDER,
 )
 from parsers import ReviewComment, Severity
@@ -29,7 +29,16 @@ logger = logging.getLogger(__name__)
 
 def create_llm():
     """Create the LLM instance based on configured provider."""
-    if LLM_PROVIDER == "gemini":
+    if LLM_PROVIDER == "groq":
+        from langchain_groq import ChatGroq
+        print(f"[DEBUG] Using Groq provider, model={MODEL_NAME}")
+        return ChatGroq(
+            model=MODEL_NAME,
+            api_key=GROQ_API_KEY,
+            temperature=TEMPERATURE,
+            max_tokens=MAX_TOKENS,
+        )
+    elif LLM_PROVIDER == "gemini":
         from langchain_google_genai import ChatGoogleGenerativeAI
         print(f"[DEBUG] Using Gemini provider, model={MODEL_NAME}")
         return ChatGoogleGenerativeAI(

@@ -10,13 +10,14 @@ load_dotenv()
 GITHUB_TOKEN = os.environ.get("GITHUB_TOKEN", "")
 OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY", "")
 GOOGLE_API_KEY = os.environ.get("GOOGLE_API_KEY", "")
+GROQ_API_KEY = os.environ.get("GROQ_API_KEY", "")
 
 # --- LLM Provider ---
-# Supported: "gemini" (free), "openai" (paid)
-LLM_PROVIDER = os.getenv("LLM_PROVIDER", "gemini")
+# Supported: "groq" (free), "gemini" (free), "openai" (paid)
+LLM_PROVIDER = os.getenv("LLM_PROVIDER", "groq")
 
 # --- LLM Settings ---
-MODEL_NAME = os.getenv("MODEL_NAME", "gemini-2.0-flash")
+MODEL_NAME = os.getenv("MODEL_NAME", "llama-3.3-70b-versatile")
 TEMPERATURE = float(os.getenv("TEMPERATURE", "0.1"))
 MAX_TOKENS = int(os.getenv("MAX_TOKENS", "2000"))
 
