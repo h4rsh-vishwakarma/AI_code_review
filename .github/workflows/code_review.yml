@@ -46,4 +46,4 @@ jobs:
             --pr "$PR_NUMBER" \
             --config ".reviewbot.yml" \
             --enable-ast \
-            --min-severity warning
+            --min-severity suggestion 2>&1
