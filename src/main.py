@@ -193,10 +193,12 @@ def main() -> None:
     reviewer = CodeReviewer(rag_engine=rag_engine, rule_engine=rule_engine)
 
     # Test API connectivity
-    provider = os.environ.get('LLM_PROVIDER', 'gemini')
+    provider = os.environ.get('LLM_PROVIDER', 'groq')
     print(f"[DEBUG] Provider: {provider}")
-    print(f"[DEBUG] Model: {os.environ.get('MODEL_NAME', 'gemini-2.0-flash (default)')}")
-    if provider == "gemini":
+    print(f"[DEBUG] Model: {os.environ.get('MODEL_NAME', 'llama-3.3-70b-versatile (default)')}")
+    if provider == "groq":
+        print(f"[DEBUG] Groq API key present: {bool(os.environ.get('GROQ_API_KEY'))}")
+    elif provider == "gemini":
         print(f"[DEBUG] Google API key present: {bool(os.environ.get('GOOGLE_API_KEY'))}")
     else:
         print(f"[DEBUG] OpenAI API key present: {bool(os.environ.get('OPENAI_API_KEY'))}")
