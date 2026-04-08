@@ -1,0 +1,63 @@
+name: Process Review Feedback
+
+on:
+  issue_comment:
+    types: [created]
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  process-feedback:
+    # Only run on PR comments that are replies to bot comments
+    if: >
+      github.event.issue.pull_request &&
+      contains(github.event.comment.body, '@review-bot') ||
+      contains(github.event.comment.body, 'good catch') ||
+      contains(github.event.comment.body, 'false positive') ||
+      contains(github.event.comment.body, 'not an issue')
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Process feedback
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          python -c "
+          import sys, os, json
+          sys.path.insert(0, 'src')
+          from feedback import FeedbackCollector
+
+          event = json.loads(open(os.environ['GITHUB_EVENT_PATH']).read())
+          collector = FeedbackCollector()
+
+          repo = os.environ.get('GITHUB_REPOSITORY', '')
+          pr_number = event.get('issue', {}).get('number', 0)
+          comment_body = event.get('comment', {}).get('body', '')
+
+          # Find the parent comment (bot comment being replied to)
+          # This is a simplified version — full implementation would use
+          # the GitHub API to fetch the review comment thread
+          collector.record_from_reply(
+              repo=repo,
+              pr_number=pr_number,
+              comment_body='',  # Would need parent comment body
+              reply_text=comment_body,
+          )
+          print(f'Recorded feedback for PR #{pr_number}')
+          "

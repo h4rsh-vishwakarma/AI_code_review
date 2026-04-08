@@ -1,0 +1,79 @@
+# =============================================================================
+# AI Code Review Bot — Custom Rules Configuration
+# =============================================================================
+# Define team-specific rules that the bot will enforce on every PR.
+# These rules run alongside the LLM review agents.
+#
+# Rule fields:
+#   name        - Unique identifier for the rule
+#   pattern     - Regex to match in added lines (optional)
+#   severity    - critical | warning | suggestion
+#   message     - Message shown when rule is violated
+#   paths       - Glob patterns for files to check (empty = all files)
+#   exclude     - Glob patterns for files to skip
+#   languages   - Language filter (python, javascript, typescript, go, etc.)
+#   auto_assign - GitHub usernames to auto-request review
+#   auto_label  - Labels to add to the PR
+#   condition   - Semantic condition for LLM to evaluate (no regex needed)
+# =============================================================================
+
+rules:
+  # --- Security Rules ---
+  - name: no-eval
+    pattern: "\\beval\\s*\\("
+    severity: critical
+    message: "eval() enables code injection attacks. Use safer alternatives."
+    languages: ["python", "javascript", "typescript"]
+
+  - name: no-exec
+    pattern: "\\bexec\\s*\\("
+    severity: critical
+    message: "exec() can execute arbitrary code. Avoid in production."
+    languages: ["python"]
+
+  - name: no-hardcoded-secrets
+    pattern: "(password|secret|api_key|token)\\s*=\\s*['\"][^'\"]{8,}"
+    severity: critical
+    message: "Possible hardcoded secret detected. Use environment variables or a secrets manager."
+    exclude: ["tests/**", "**/*test*", "**/*.example", ".env.example"]
+
+  - name: no-shell-true
+    pattern: "subprocess.*shell\\s*=\\s*True"
+    severity: warning
+    message: "subprocess with shell=True is vulnerable to command injection. Use a list of args instead."
+    languages: ["python"]
+
+  # --- Code Quality Rules ---
+  - name: no-console-log
+    pattern: "console\\.log\\("
+    severity: suggestion
+    message: "Remove console.log() before merging. Use a proper logger."
+    paths: ["src/**/*.js", "src/**/*.ts", "src/**/*.tsx"]
+    exclude: ["src/debug/**", "src/**/*.test.*"]
+
+  - name: no-todo-without-ticket
+    pattern: "TODO(?!\\s*\\(\\w+-\\d+\\))"
+    severity: suggestion
+    message: "TODOs should reference a ticket number, e.g., TODO(PROJ-123)."
+
+  - name: no-print-statements
+    pattern: "\\bprint\\s*\\("
+    severity: suggestion
+    message: "Use logging instead of print() in production code."
+    languages: ["python"]
+    exclude: ["tests/**", "scripts/**"]
+
+  # --- Database Rules ---
+  - name: migration-review
+    paths: ["db/migrations/**", "**/migrations/**", "**/*.sql"]
+    severity: critical
+    message: "Database migrations require manual review. Check backward compatibility and rollback plan."
+    auto_assign: []  # Add your DBA team member usernames here
+    auto_label: ["database-review"]
+
+  # --- Infrastructure Rules ---
+  - name: infra-review
+    paths: [".github/workflows/**", "Dockerfile", "docker-compose*.yml", "**/*.tf"]
+    severity: warning
+    message: "Infrastructure changes detected. Verify this doesn't break CI/CD or deployment."
+    auto_label: ["infra-review"]
