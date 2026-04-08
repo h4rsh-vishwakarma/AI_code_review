@@ -1,9 +1,7 @@
 name: Index Codebase for RAG
 
 on:
-  push:
-    branches: [main, master]
-  workflow_dispatch:  # Manual trigger
+  workflow_dispatch:  # Manual trigger only — enable push trigger when RAG is configured
 
 permissions:
   contents: read
